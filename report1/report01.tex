@@ -5,6 +5,42 @@
 \usepackage{float}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{csquotes}
+
+\usepackage[
+  backend=biber,
+  style=numeric,
+  sorting=none
+]{biblatex}
+
+\addbibresource{references/references.bib}
+
+\definecolor{darkergreen}{rgb}{0,0.5,0} % Adjust the RGB values as needed
+
+\lstset{frame=tb,
+  language=SQL,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{darkergreen},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  captionpos=b
+}
+
+\lstdefinestyle{mystyle-java}{
+  language=Java,
+  morekeywords={String, public, class} % Add additional Java keywords here
+}
 
 \setlength{\parindent}{0em}
 \setlength{\parskip}{0.5em}
@@ -39,102 +75,247 @@
 
 \subsection*{Experimental Setup}
 
-Describe your experimental setup in a few lines.
+For our experiments we used the following hardware and software:
 
-\youranswerhere{}
+\begin{multicols}{2}
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{lc}
+      \toprule
+      Component & Specs \\
+      \midrule
+      Processor & i7-13700H 3.7-5.0 GHz \\
+      Memory & 32 GiB \\
+      \bottomrule
+    \end{tabular}
+    \caption{Hardware: Dell XPS 15 9530}
+    \label{table:hardware}
+  \end{table}
+
+  \columnbreak
+
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{lc}
+      \toprule
+      Software & Version \\
+      \midrule
+      OS & Ubuntu 22.04 \\
+      Postgres & 2.3.4 \\
+      postgresql & 42.7.3 \\
+      MariaDB & 10.6.16 \\
+      mariadb-java-client & 3.3.3 \\
+      Java & 18 \\
+      \bottomrule
+    \end{tabular}
+    \caption{Software}
+    \label{table:software_versions}
+  \end{table}
+\end{multicols}
+
+Both Postgres and MariaDB were hosted on localhost, on which we also executed our experiments.
+The client was implemented in Java and gained access to our databases using the JDBC drivers listed above.
+Before executing any tests, we initially created a database for each DBMS by using:
+
+\begin{lstlisting}[caption={Create database}]
+CREATE DATABASE db_tuning_1;
+\end{lstlisting}
+
+Additionally, we programmed our client to create the \texttt{auth} table on each DBMS if necessary by executing:
+\begin{lstlisting}[caption={Create \texttt{auth} table}]
+CREATE TABLE IF NOT EXISTS auth (name character varying(49), pubid character varying(149));
+\end{lstlisting}
+
 
 \subsection*{Straightforward Implementation}
 
 \paragraph{Implementation}
 
-Describe in a few lines how this approach works and show the query that you use. You may also show small (!) code snippets if you think they help the understanding.
+In the straightforward implementation we read the input file \texttt{auth.tsv} line by line and instantly insert each
+tuple individually:
 
-\youranswerhere{}
-
-\begin{lstlisting}[style=dbtsql]
-[Your SQL query goes here ...]
+\begin{lstlisting}[caption={Insert tuple individually}]
+INSERT INTO auth (name, pubid) VALUES(name_val, pubid_val);
 \end{lstlisting}
+
+We note that we used the \texttt{PreparedStatement} objects in order to simplify the implementation of our client:
+
+\begin{lstlisting}[style=mystyle-java, caption={Implementation: Straightforward approach}]
+...
+PreparedStatement insertAuthorStatement = connection.prepareStatement("INSERT INTO auth (name, pubid) VALUES(?, ?)");
+...
+insertAuthorStatement.setString(1, lineParts[0]);
+insertAuthorStatement.setString(2, lineParts[1]);
+insertAuthorStatement.execute();
+...
+\end{lstlisting}
+
+Hence, we need as many SQL-statements as we have lines, or tuples, in the input file.
 
 \subsection*{Efficient Approaches}
 
-\subsubsection*{Efficient Approach 1: (NAME)}
+\subsubsection*{Efficient Approach 1: Batch Insert}
 
 \paragraph{Implementation}
 
-Describe in a few lines how this approach works and show the query that you use. You may also show small (!) code snippets if you think they help the understanding.
+In this approach we utilize the batch functionality of the \\
+\texttt{PreparedStatement} object.
+Instead of inserting each tuple individually, we add all tuples into a single \texttt{INSERT} SQL-statement.
 
-\youranswerhere{}
-
-\begin{lstlisting}[style=dbtsql]
-[Your SQL query goes here ...]
+\begin{lstlisting}[style=mystyle-java, caption={Implementation: Batch approach}]
+...
+PreparedStatement insertAuthorStatement = connection.prepareStatement("INSERT INTO auth (name, pubid) VALUES(?, ?)");
+...
+insertAuthorStatement.setString(1, lineParts[0]);
+insertAuthorStatement.setString(2, lineParts[1]);
+insertAuthorStatement.addBatch();
+...
+insertAuthorStatement.executeBatch();
+...
 \end{lstlisting}
+
+To avoid the DBMS to commit during the creation of our batch, we deactivated the auto-commit functionality before our
+implementation and activated it again afterwards.
+
+\begin{lstlisting}[style=mystyle-java, caption={Implementation: Auto-commit in batch approach}]
+...
+connection.setAutoCommit(false);
+...
+connection.setAutoCommit(true);
+...
+\end{lstlisting}
+
+We note that the SQL-statement itself remained the same as in the straightforward approach.
 
 \paragraph{Why is this approach efficient?}
 
-Explain, why this approach is more efficient than the straightforward approach. Where does the system save the time? Be clear and precise!
+Batch inserting is an efficient technique to improve performance while inserting multiple tuples into a database.
+This approach avoids unnecessary overhead that occurs while executing an \texttt{INSERT} SQL-statement for each
+individual tuple.
+Since now the amount of SQL-statements we have to transfer from the client to the database is much smaller, we also
+reduced potential overhead due to the round-trips we would have to take otherwise.
+In addition, the DBMS has much less work in terms of logging in comparison to multiple \texttt{INSERT} statements
+\cite{Cencio2020}.
 
-\emph{Important:} Cite the references that you used to answer this question, for example, using footnotes or the References section at the end of the report.
+\subsubsection*{Efficient Approach 2: Copy/Load Data Infile}
 
-\youranswerhere{}
+\paragraph{Implementation}
+
+In this approach we make use of the \texttt{COPY} and \texttt{LOAD DATA INFILE} functionalities of Postgres for the former
+and MariaDB for the latter.
+While utilizing these features, the DBMS directly copies the tuples from the file into the database, keeping the
+required actions of the client to an absolute minimum.
+
+\begin{lstlisting}[style=mystyle-java, caption={Implementation: \texttt{COPY} functionality of Postgres}]
+...
+String sqlCopy = "COPY auth (name, pubid) FROM '" + "/tmp/" + inputFile + "' DELIMITER E'\t'";
+...
+Statement copyStatement = connection.createStatement();
+...
+copyStatement.execute(sqlCopy);
+...
+\end{lstlisting}
+
+\begin{lstlisting}[style=mystyle-java, caption={Implementation: \texttt{LOAD DATA INFILE} functionality of MariaDB}]
+...
+String loadSql = "LOAD DATA INFILE '" + "/tmp/" + inputFile + "' INTO TABLE auth FIELDS TERMINATED BY '\t' " +
+                "LINES TERMINATED BY '\n'";
+...
+Statement loadStatement = connection.createStatement();
+...
+loadStatement.execute(loadSql);
+...
+\end{lstlisting}
+
+We note that both functionalities are not part of the SQL standard, hence they use DBMS specific syntax.
+Additionally, each DBMS is required to have direct access to the input file, which we solved by placing the \texttt{auth.tsv}
+file into the \texttt{/dev} directory.
+
+\paragraph{Why is this approach efficient?}
+
+For Postgres the \texttt{COPY} functionality is always faster than a batch insert \cite{Zamora2020}.
+According to \cite{pganalyze2020}, \texttt{COPY} enables Postgres to handle its buffers more efficiently than it is able
+to while using a batch insert.
+Hence, this results in a faster execution time.
+In case of MariaDB and \texttt{LOAD DATA INFILE}, the performance boost is a result of a more efficient way of
+reading and caching the input data.
+For some transactional engines MariaDB even omits the logging functionality in order to increase the performance further
+\cite{MariaDBInsertData2021}.
 
 \paragraph{Tuning principle}
 
-Which tuning principle did you apply? Pick the one that describes this approach best (``think globally, fix locally'' is too general).
-
-\youranswerhere{}
+In this approach we apply the \enquote{Render on the Server What Is Due on the Server} principle.
+As already mentioned, we reduced the work for the client to a minimum and shifted the workload towards the
+DBMS, which has to insert the tuples anyways.
 
 \subsubsection*{Portability}
 
 \paragraph{Implementation}
 
-Describe in a few lines what you needed to change (esp. towards SQL). You may also show small (!) code snippets if you think they help the understanding.
-
-\youranswerhere
-
-\begin{lstlisting}[style=dbtsql]
-[Your SQL query goes here ...]
-\end{lstlisting}
+To begin with, there are obviously some differences in the connection addresses for each DBMS.
+For the straightforward approach and the batch insert approach there are no changes needed in the code.
+The biggest difference in implementation occurs within the \texttt{COPY}/\texttt{LOAD DATA INFILE} approach.
+Here we have to consider the required syntax of each DBMS in order to execute the transaction accordingly.
+The differences are already portrait during our discussion of the second efficient approach, hence we omit these here.
 
 \paragraph{Did you observe performance differences. If so: Why. If not: Why not?}
-
-
-
-\youranswerhere{}
+During our experiments we noticed that Postgres has a slight advantage against MariaDB in the straightforward approach.
+For the batch insert approach, MariaDB required a tad less time than Postgres.
+The biggest performance difference occurred during the \texttt{COPY}/\texttt{LOAD DATA INFILE} approach.
+Here we noticed that Postgres outperformed MariaDB by quite some bit, as we can see in the table below.
+This could be due to a more efficient implementation of caching in Postgres, as discussed in
+\cite{KinstaMariaDBvsPostgreSQL2021}.
+The difference for the straightforward approach follows \cite{Mitchell2024}, where
+Postgres outperforms MariaDB on average as well.
 
 \subsection*{Runtime Experiment}
+
+\begin{multicols}{2}
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{l|r}
+      \toprule
+      Approach          & Runtime [sec] \tabularnewline
+      \hline
+      Straightforward   & 1077.3 \tabularnewline
+      Batch Insert & 12.3 \tabularnewline
+      \texttt{COPY} & 1.1 \tabularnewline
+      \bottomrule
+    \end{tabular}
+    \caption{Performance Postgres}
+    \label{table:performance_postgres}
+  \end{table}
+
+  \columnbreak
+
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{l|r}
+      \toprule
+      Approach          & Runtime [sec] \tabularnewline
+      \hline
+      Straightforward   & 1125 \tabularnewline
+      Batch Insert & 10.5 \tabularnewline
+      \texttt{LOAD DATA INFILE} & 9.6 \tabularnewline
+      \bottomrule
+    \end{tabular}
+    \caption{Performance MariaDB}
+    \label{table:performance_mariadb}
+  \end{table}
+\end{multicols}
 
 \paragraph{Notes}
 
 \begin{itemize}
-  \item For the straightforward approach you are allowed to import only a subset of the tuples (e.g., 10.000 tuples) and estimate the overall runtime. The timings for all other approaches should be real measurements over the whole data set.
-  \item Specify the setting of the experiment, i.e., where is the database server (local machine, database server at the department), where is the client (wired/wireless network of the department)?
+  \item As already mentioned, both DBMS were hosted locally on the same machine as the client
 \end{itemize}
-
-\begin{table}[H]
-  \centering
-  \begin{tabular}{l|r}
-    Approach          & Runtime [sec] \tabularnewline
-    \hline
-    Straightforward   & \ldots \tabularnewline
-    Approach (NAME) & \ldots \tabularnewline
-    Local Approach & \ldots \tabularnewline
-  \end{tabular}
-\end{table}
 
 \subsection*{Time Spent on this Assignment}
 
-Time in hours per person: \textbf{XXX}
+Time in hours per person: \textbf{8}
 
-\subsection*{References}
+\pagebreak
 
-\begin{table}[H]
-  \centering
-  \begin{tabular}{c}
-    \hline
-    \textbf{Important:} Reference your information sources! \tabularnewline
-    Remove this section if you use footnotes to reference your information sources. \tabularnewline
-    \hline
-  \end{tabular}
-\end{table}
+\printbibliography[title=References]
 
 \end{document}
