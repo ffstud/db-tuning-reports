@@ -61,7 +61,10 @@
     Give the first type of query that might be hard for your database to optimize.
 
     \begin{lstlisting}[style=dbtsql]
-[Your original SQL query goes here ...]
+ SELECT ssnum FROM Employee e1 
+ WHERE salary > (SELECT AVG(e2.salary) 
+                 FROM Employee e2, Techdept 
+                 WHERE e2.dept = e1.dept AND e2.dept = Techdept.dept)
     \end{lstlisting}
 
     \paragraph{Rewritten Query}
@@ -69,7 +72,14 @@
     Give the rewritten query.
 
     \begin{lstlisting}[style=dbtsql]
-[Your rewritten SQL query goes here ...]
+CREATE TEMPORARY TABLE Temp AS (
+    SELECT AVG(salary) as avsalary, e2.dept 
+    FROM Employee e2, Techdept 
+    WHERE e2.dept = Techdept.dept 
+    GROUP BY e2.dept)
+
+SELECT ssnum FROM Employee e1, Temp 
+WHERE salary > avsalary AND e1.dept = Temp.dept
     \end{lstlisting}
 
     \paragraph{Evaluation of the Execution Plans}
@@ -78,7 +88,33 @@
 
             {\small
     \parskip0pt\begin{verbatim}
-[Your execution plan of the original query goes here ...]
+Seq Scan on employee e1  (cost=0.00..102386331.93 rows=33333 width=4) (actual 
+time=102.691..4409.692 rows=4889 loops=1)
+  Filter: ((salary)::numeric > (SubPlan 1))
+  Rows Removed by Filter: 95111
+  SubPlan 1
+    ->  Aggregate  (cost=1023.83..1023.84 rows=1 width=32) (actual time=0.043..0.043 rows=1 
+    loops=100000)
+          ->  Nested Loop  (cost=16.19..1021.33 rows=1000 width=4) (actual time=0.010..0.040 
+          rows=100 loops=100000)
+                ->  Index Only Scan using techdept_pkey on techdept  (cost=0.14..8.16 rows=1 
+                width=146) (actual time=0.001..0.001 rows=0 loops=100000)
+                      Index Cond: (dept = (e1.dept)::text)
+                      Heap Fetches: 9978
+                ->  Bitmap Heap Scan on employee e2  (cost=16.04..1003.16 rows=1000 width=17) 
+                (actual time=0.087..0.330 rows=998 loops=9978)
+                      Recheck Cond: ((dept)::text = (e1.dept)::text)
+                      Heap Blocks: exact=6060425
+                      ->  Bitmap Index Scan on idx_dept  (cost=0.00..15.79 rows=1000 width=0) 
+                      (actual time=0.038..0.038 rows=998 loops=9978)
+                            Index Cond: ((dept)::text = (e1.dept)::text)
+Planning Time: 0.451 ms
+JIT:
+  Functions: 15
+"  Options: Inlining true, Optimization true, Expressions true, Deforming true"
+"  Timing: Generation 0.688 ms, Inlining 13.301 ms, Optimization 53.221 ms, Emission 33.917 ms, 
+Total 101.127 ms"
+Execution Time: 4410.725 ms
     \end{verbatim}}
 
     Give an interpretation of the execution plan, i.e., describe how the original query is evaluated.
@@ -89,7 +125,20 @@
 
             {\small
     \parskip0pt\begin{verbatim}
-[Your execution plan of the rewritten query goes here ...]
+Hash Join  (cost=3771.00..7858.00 rows=65000 width=4) (actual time=38.731..42.704 rows=4889 
+loops=1)
+  Hash Cond: ((temp.dept)::text = (e1.dept)::text)
+  Join Filter: ((e1.salary)::numeric > temp.avsalary)
+  Rows Removed by Join Filter: 5089
+  ->  Seq Scan on temp  (cost=0.00..13.90 rows=390 width=178) (actual time=0.013..0.015 rows=10 
+  loops=1)
+  ->  Hash  (cost=1935.00..1935.00 rows=100000 width=21) (actual time=38.169..38.170 rows=100000 
+  loops=1)
+        Buckets: 65536  Batches: 2  Memory Usage: 2942kB
+        ->  Seq Scan on employee e1  (cost=0.00..1935.00 rows=100000 width=21) (actual 
+        time=0.013..12.844 rows=100000 loops=1)
+Planning Time: 0.686 ms
+Execution Time: 42.992 ms
     \end{verbatim}}
 
     Give an interpretation of the execution plan, i.e., describe how the rewritten query is evaluated.
@@ -125,7 +174,8 @@
     Give the second type of query that might be hard for your database to optimize.
 
     \begin{lstlisting}[style=dbtsql]
-[Your original SQL query goes here ...]
+SELECT ssnum FROM Employee
+WHERE dept IN (SELECT dept FROM Techdept)
     \end{lstlisting}
 
     \paragraph{Rewritten Query}
@@ -133,7 +183,8 @@
     Give the rewritten query.
 
     \begin{lstlisting}[style=dbtsql]
-[Your rewritten SQL query goes here ...]
+SELECT ssnum FROM Employee, Techdept
+WHERE Employee.dept = Techdept.dept
     \end{lstlisting}
 
     \paragraph{Evaluation of the Execution Plans}
@@ -141,8 +192,19 @@
     Give the execution plan of the original query.
 
             {\small
-    \parskip0pt\begin{verbatim}
-[Your execution plan of the original query goes here ...]
+    \parskip0pt
+    \begin{verbatim}
+Hash Join  (cost=13.82..2217.87 rows=100000 width=4) (actual time=0.046..37.056 rows=9978 
+loops=1)
+  Hash Cond: ((employee.dept)::text = (techdept.dept)::text)
+  ->  Seq Scan on employee  (cost=0.00..1935.00 rows=100000 width=17) (actual time=0.009..12.933 
+  rows=100000 loops=1)
+  ->  Hash  (cost=11.70..11.70 rows=170 width=146) (actual time=0.018..0.021 rows=10 loops=1)
+        Buckets: 1024  Batches: 1  Memory Usage: 9kB
+        ->  Seq Scan on techdept  (cost=0.00..11.70 rows=170 width=146) (actual 
+        time=0.006..0.009 rows=10 loops=1)
+Planning Time: 0.393 ms
+Execution Time: 37.775 ms
     \end{verbatim}}
 
     Give an interpretation of the execution plan, i.e., describe how the original query is evaluated.
@@ -153,7 +215,17 @@
 
             {\small
     \parskip0pt\begin{verbatim}
-[Your execution plan of the rewritten query goes here ...]
+Hash Join  (cost=13.82..2217.87 rows=100000 width=4) (actual time=0.031..30.029 rows=9978 
+loops=1)
+  Hash Cond: ((employee.dept)::text = (techdept.dept)::text)
+  ->  Seq Scan on employee  (cost=0.00..1935.00 rows=100000 width=17) (actual time=0.007..10.490 
+  rows=100000 loops=1)
+  ->  Hash  (cost=11.70..11.70 rows=170 width=146) (actual time=0.012..0.014 rows=10 loops=1)
+        Buckets: 1024  Batches: 1  Memory Usage: 9kB
+        ->  Seq Scan on techdept  (cost=0.00..11.70 rows=170 width=146) (actual 
+        time=0.004..0.006 rows=10 loops=1)
+Planning Time: 0.242 ms
+Execution Time: 30.583 ms
     \end{verbatim}}
 
     Give an interpretation of the execution plan, i.e., describe how the rewritten query is evaluated.
