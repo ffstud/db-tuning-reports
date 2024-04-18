@@ -134,19 +134,24 @@ time=102.691..4409.692 rows=4889 loops=1)
   Filter: ((salary)::numeric > (SubPlan 1))
   Rows Removed by Filter: 95111
   SubPlan 1
-    ->  Aggregate  (cost=1023.83..1023.84 rows=1 width=32) (actual time=0.043..0.043 rows=1 
+    ->  Aggregate  (cost=1023.83..1023.84 rows=1 width=32)
+    (actual time=0.043..0.043 rows=1
     loops=100000)
-          ->  Nested Loop  (cost=16.19..1021.33 rows=1000 width=4) (actual time=0.010..0.040 
+          ->  Nested Loop  (cost=16.19..1021.33 rows=1000 width=4)
+          (actual time=0.010..0.040
           rows=100 loops=100000)
-                ->  Index Only Scan using techdept_pkey on techdept  (cost=0.14..8.16 rows=1 
+                ->  Index Only Scan using techdept_pkey on techdept
+                (cost=0.14..8.16 rows=1
                 width=146) (actual time=0.001..0.001 rows=0 loops=100000)
                       Index Cond: (dept = (e1.dept)::text)
                       Heap Fetches: 9978
-                ->  Bitmap Heap Scan on employee e2  (cost=16.04..1003.16 rows=1000 width=17) 
+                ->  Bitmap Heap Scan on employee e2
+                (cost=16.04..1003.16 rows=1000 width=17)
                 (actual time=0.087..0.330 rows=998 loops=9978)
                       Recheck Cond: ((dept)::text = (e1.dept)::text)
                       Heap Blocks: exact=6060425
-                      ->  Bitmap Index Scan on idx_dept  (cost=0.00..15.79 rows=1000 width=0) 
+                      ->  Bitmap Index Scan on idx_dept
+                      (cost=0.00..15.79 rows=1000 width=0)
                       (actual time=0.038..0.038 rows=998 loops=9978)
                             Index Cond: ((dept)::text = (e1.dept)::text)
 Planning Time: 0.451 ms
@@ -158,7 +163,16 @@ Total 101.127 ms"
 Execution Time: 4410.725 ms
     \end{verbatim}}
 
-    Give an interpretation of the execution plan, i.e., describe how the original query is evaluated.
+    For the outer query the Employee table gets scanned sequentially.
+    Each tupel of this scan gets filtered by the $>$-operator, based on the result of SubPlan1.
+    The subplan itself represents the nested query.
+    To evaluate the nested query, both the Employee table and the Techdept table are needed.
+    For the Techdept table we utilize an index only scan, based on the index that we created earlier.
+
+    The results of the scan of both tables are then combined by using a Nested Loop Join.
+    Finally, the aggregate function \texttt{average} is applied, which gives us the result of the SubPlan1.
+
+
 
     \youranswerhere{}
 
