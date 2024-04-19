@@ -163,44 +163,82 @@ Total 101.127 ms"
 Execution Time: 4410.725 ms
     \end{verbatim}}
 
-    For the outer query the Employee table gets scanned sequentially.
+    Give an interpretation of the execution plan, i.e., describe how the original query is evaluated.
+
+    For the outer query the Employee table (e1) is scanned sequentially.
     Each tupel of this scan gets filtered by the $>$-operator, based on the result of SubPlan1.
     The subplan itself represents the nested query.
-    To evaluate the nested query, both the Employee table and the Techdept table are needed.
-    For the Techdept table we utilize an index only scan, based on the index that we created earlier.
-
+    To evaluate this subplan, both the Employee table (e2) and the Techdept table are needed.
+    For the Techdept table we utilize an index only scan which uses an index on the primary key that Postgres created
+    automatically.
+    Hence, we do not access the data directly since we are able to check the condition (e1.dept = dept) by using only
+    the index.
+    The Employee table (e2) is accessed by using a combination of a bitmap heap scan and a bitmap index scan, on the index
+    idx\_dept that we created earlier, with respect to the condition dept = e1.dept.
+    Here, the bitmap index scan marks the rows that fulfill the condition and are later needed for the bitmap heap scan
+    by providing an efficient bitmap representation of the rows to be retrieved.
     The results of the scan of both tables are then combined by using a Nested Loop Join.
     Finally, the aggregate function \texttt{average} is applied, which gives us the result of the SubPlan1.
-
-
-
-    \youranswerhere{}
 
     Give the execution plan of the rewritten query.
 
             {\small
     \parskip0pt\begin{verbatim}
-Hash Join  (cost=3771.00..7858.00 rows=65000 width=4) (actual time=38.731..42.704 rows=4889 
+HashAggregate  (cost=2717.87..2719.12 rows=100 width=45)
+               (actual time=15.557..15.561 rows=10 loops=1)
+  Group Key: e2.dept
+  Batches: 1  Memory Usage: 24kB
+  ->  Hash Join  (cost=13.82..2217.87 rows=100000 width=17)
+                 (actual time=0.021..14.252 rows=9978 loops=1)
+        Hash Cond: ((e2.dept)::text = (techdept.dept)::text)
+        ->  Seq Scan on employee e2  (cost=0.00..1935.00 rows=100000 width=17)
+                                     (actual time=0.004..5.089 rows=100000 loops=1)
+        ->  Hash  (cost=11.70..11.70 rows=170 width=146)
+                  (actual time=0.008..0.009 rows=10 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 9kB
+              ->  Seq Scan on techdept  (cost=0.00..11.70 rows=170 width=146)
+                                        (actual time=0.003..0.004 rows=10 loops=1)
+Planning Time: 0.190 ms
+Execution Time: 15.593 ms
+    \end{verbatim}}
+
+            {\small
+    \parskip0pt\begin{verbatim}
+Hash Join  (cost=3771.00..7858.00 rows=65000 width=4)
+           (actual time=38.731..42.704 rows=4889
 loops=1)
   Hash Cond: ((temp.dept)::text = (e1.dept)::text)
   Join Filter: ((e1.salary)::numeric > temp.avsalary)
   Rows Removed by Join Filter: 5089
-  ->  Seq Scan on temp  (cost=0.00..13.90 rows=390 width=178) (actual time=0.013..0.015 rows=10 
+  ->  Seq Scan on temp  (cost=0.00..13.90 rows=390 width=178)
+                        (actual time=0.013..0.015 rows=10
   loops=1)
-  ->  Hash  (cost=1935.00..1935.00 rows=100000 width=21) (actual time=38.169..38.170 rows=100000 
+  ->  Hash  (cost=1935.00..1935.00 rows=100000 width=21)
+            (actual time=38.169..38.170 rows=100000
   loops=1)
         Buckets: 65536  Batches: 2  Memory Usage: 2942kB
-        ->  Seq Scan on employee e1  (cost=0.00..1935.00 rows=100000 width=21) (actual 
-        time=0.013..12.844 rows=100000 loops=1)
+        ->  Seq Scan on employee e1  (cost=0.00..1935.00 rows=100000 width=21)
+                                     (actual time=0.013..12.844 rows=100000 loops=1)
 Planning Time: 0.686 ms
 Execution Time: 42.992 ms
     \end{verbatim}}
 
     Give an interpretation of the execution plan, i.e., describe how the rewritten query is evaluated.
 
-    \youranswerhere{}
+    The first execution plan handles the creation of the temporary table which is needed to efficiently check the
+    average condition later on.
+    As we can see, it starts with an aggregation function which takes the result of a hash join as its input.
+    To check the condition of the hash join, we first sequentially read the Employee table (e2) and then read the
+    Techdept table as well, with a hashing function applied to it, before handing both over to the hash join.
 
-    Discuss, how the execution plan changed between the original and the rewritten query. In both the interpretation of the query plans and the discussion focus on the crucial parts, i.e., the parts of the query plans that cause major runtime differences.
+    The second execution plan mainly consists of a hash join, which checks the average salary condition.
+    To accomplish this check, we need to sequentially read the Temp table and the Employee table (e1), where e1 gets hashed
+    before forwarding it into the hash join.
+
+
+    Discuss, how the execution plan changed between the original and the rewritten query.
+    In both the interpretation of the query plans and the discussion focus on the crucial parts, i.e., the parts of the
+    query plans that cause major runtime differences.
 
     \youranswerhere{}
 
