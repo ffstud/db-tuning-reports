@@ -244,6 +244,10 @@ Execution Time: 42.992 ms
     In both the interpretation of the query plans and the discussion focus on the crucial parts, i.e., the parts of the
     query plans that cause major runtime differences.
 
+    Instead of using costly nested loop joins and subqueries, the rewritten query makes use of hash joins, which are
+    generally more efficient.
+    Additionally, since we are using a temporary table, we get two query plans.
+
     \paragraph{Experiment}
 
     Give the runtimes of the original and the rewritten query.
