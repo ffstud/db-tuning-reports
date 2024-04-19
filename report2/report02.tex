@@ -205,17 +205,14 @@ Execution Time: 15.593 ms
             {\small
     \parskip0pt\begin{verbatim}
 Hash Join  (cost=3771.00..7858.00 rows=65000 width=4)
-           (actual time=38.731..42.704 rows=4889
-loops=1)
+           (actual time=38.731..42.704 rows=4889 loops=1)
   Hash Cond: ((temp.dept)::text = (e1.dept)::text)
   Join Filter: ((e1.salary)::numeric > temp.avsalary)
   Rows Removed by Join Filter: 5089
   ->  Seq Scan on temp  (cost=0.00..13.90 rows=390 width=178)
-                        (actual time=0.013..0.015 rows=10
-  loops=1)
+                        (actual time=0.013..0.015 rows=10 loops=1)
   ->  Hash  (cost=1935.00..1935.00 rows=100000 width=21)
-            (actual time=38.169..38.170 rows=100000
-  loops=1)
+            (actual time=38.169..38.170 rows=100000 loops=1)
         Buckets: 65536  Batches: 2  Memory Usage: 2942kB
         ->  Seq Scan on employee e1  (cost=0.00..1935.00 rows=100000 width=21)
                                      (actual time=0.013..12.844 rows=100000 loops=1)
@@ -258,7 +255,6 @@ Execution Time: 42.992 ms
 
     Discuss, why the rewritten query is (or is not) faster than the original query.
 
-    \youranswerhere{} \\
     The original query is less efficient than the rewritten query.
     This is because the original query uses a nested loop join, i.e.\ for each existing tuple in employee e1, an additional selection is made for employee e2 and Techdept and only then compared to see if the values also match.
     The newly written query uses a hash join, i.e.\ we search for the matching values once in a query, which saves us a lot of time, as you can see from the test results. \newline
