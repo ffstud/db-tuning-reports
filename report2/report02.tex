@@ -220,7 +220,13 @@ Execution Time: 42.992 ms
 
     Discuss, why the rewritten query is (or is not) faster than the original query.
 
-    \youranswerhere{}
+    \youranswerhere{} \\
+    The original query is less efficient than the rewritten query.
+    This is because the original query uses a nested loop join, i.e.\ for each existing tuple in employee e1, an additional selection is made for employee e2 and Techdept and only then compared to see if the values also match.
+    The newly written query uses a hash join, i.e.\ we search for the matching values once in a query, which saves us a lot of time, as you can see from the test results. \newline
+    It is interesting to note the big difference here when the queries are executed on MariaDB, because the effort is less and therefore the efficiency is significantly faster than with PostgreSQL\@.
+    This is probably due to the fact that MariaDB uses a more efficient optimisation algorithm and therefore, for example, does not repeat every query on e2 in the nested loop connection, but possibly stores it in the cache and searches for matches on e1.
+    This also means that queries have to be made less frequently.
 
     \subsubsection*{Query 2}
 
