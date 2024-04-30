@@ -1,0 +1,143 @@
+\documentclass[11pt]{scrartcl}
+
+\usepackage[top=1.5cm]{geometry}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{csquotes}
+
+\usepackage[
+  backend=biber,
+  style=numeric,
+  sorting=none
+]{biblatex}
+
+\addbibresource{references/references.bib}
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
+
+\newcommand{\youranswerhere}{[Your answer goes here \ldots]}
+\renewcommand{\thesubsection}{\arabic{subsection}}
+
+\lstdefinestyle{dbtsql}{
+  language=SQL,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{magenta!75!black},
+  stringstyle=\color{green!50!black},
+  showspaces=false,
+  showstringspaces=false,
+  commentstyle=\color{gray}}
+
+\title{
+  \textbf{\large Assignment 3} \\
+  Index Tuning \\
+  {\large Database Tuning}}
+
+\author{
+  New Group 8 \\
+  \large Frauenschuh Florian, 12109584 \\
+  \large Lindner Peter, 12101607 \\
+  \large Weilert Alexander, 12119653
+}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Database system and version:} \texttt{Postgres 2.3.4} with driver \texttt{postgresql 42.7.3} \\
+
+\subsection{Index Data Structures}
+
+Which index data structures (e.g., B$^+$ tree index) are supported?
+
+\youranswerhere{}
+
+\subsection{Clustering Indexes}
+
+Discuss how the system supports clustering indexes, in particular:
+
+\paragraph{a)}
+
+How do you create a clustering index on \texttt{ssnum}? Show the query.\footnote{Give the queries for creating a hash index \emph{and} a B$^+$ tree index if both of them are supported.}
+
+\youranswerhere{}
+
+\begin{lstlisting}[style=dbtsql]
+[Your SQL query goes here ...]
+\end{lstlisting}
+
+\paragraph{b)}
+
+Are clustering indexes on non-key attributes supported, e.g., on \texttt{name}? Show the query.
+
+\youranswerhere{}
+
+\begin{lstlisting}[style=dbtsql]
+[Your SQL query goes here ...]
+\end{lstlisting}
+
+\paragraph{c)}
+
+Is the clustering index dense or sparse?
+
+\youranswerhere{}
+
+\paragraph{d)}
+
+How does the system deal with overflows in clustering indexes? How is the fill factor controlled?
+
+\youranswerhere{}
+
+\paragraph{e)}
+
+Discuss any further characteristics of the system related to clustering indexes that are relevant to a database tuner.
+
+\youranswerhere{}
+
+\subsection{Non-Clustering Indexes}
+
+Discuss how the system supports non-clustering indexes, in particular:
+
+\paragraph{a)}
+
+How do you create a combined, non-clustering index on \texttt{(dept,salary)}? Show the query.$^1$
+
+\youranswerhere{}
+
+\begin{lstlisting}[style=dbtsql]
+[Your SQL query goes here ...]
+\end{lstlisting}
+
+\paragraph{b)}
+
+Can the system take advantage of covering indexes? What if the index covers the query, but the condition is not a prefix of the attribute sequence \texttt{(dept,salary)}?
+
+\youranswerhere{}
+
+\paragraph{c)}
+
+Discuss any further characteristics of the system related to non-clustering indexes that are relevant to a database tuner.
+
+\youranswerhere{}
+
+\subsection{Key Compression and Page Size}
+
+If your system supports B$^+$ trees, what kind of key compression (if any) is supported? How large is the default disk page? Can it be changed?
+
+\youranswerhere{}
+
+\subsection*{Time Spent on this Assignment}
+
+Time in hours per person:
+\begin{itemize}
+  \item Florian Frauenschuh: \textbf{}
+  \item Peter Lindner: \textbf{}
+  \item Alexander Weilert: \textbf{}
+\end{itemize}
+
+\pagebreak
+
+\printbibliography[title=References]
+
+\end{document}

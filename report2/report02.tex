@@ -48,7 +48,8 @@
 
     \subsection*{Creating Tables and Indexes}
 
-    SQL statements used to create the tables \texttt{Employee}, \texttt{Student}, and \texttt{Techdept}, and the indexes on the tables:
+    SQL statements used to create the tables \texttt{Employee}, \texttt{Student}, \texttt{Techdept} and the indexes on
+    them:
 
     \begin{lstlisting}[style=dbtsql]
 CREATE TABLE IF NOT EXISTS Employee (
@@ -269,13 +270,12 @@ Execution Time: 42.992 ms
     \texttt{e1}, an additional selection is made for \textbf{Employee} \texttt{e2} and \textbf{Techdept} and only then
     compared to see if the values also match.
     The newly written query uses a hash join, i.e.\ we search for the matching values once in a query, which saves us a
-    lot of time, as you can see from the test results. \newline
-    It is interesting to note the big difference here when the queries are executed on MariaDB, because the effort is
-    less and therefore the efficiency is significantly faster than with PostgreSQL\@.
-    This is probably due to the fact that MariaDB uses a more efficient optimisation algorithm and therefore, for
-    example, does not repeat every query on e2 in the nested loop connection, but possibly stores it in the cache and
+    lot of time, as one can see from the test results. \newline
+    Interestingly, the original query is much faster when executed on MariaDB than on Postgres.
+    This leads to a less significant runtime improvement after rewriting the query.
+    This is probably due to the fact that MariaDB uses a more efficient optimization algorithm and therefore, for
+    example, does not repeat every query on \texttt{e2} in the nested loop connection, but possibly stores it in the cache and
     searches for matches on \texttt{e1}.
-    This also means that queries have to be made less frequently.
 
     \subsubsection*{Query 2}
 
@@ -348,7 +348,7 @@ Execution Time: 30.583 ms
 
     Give an interpretation of the execution plan, i.e., describe how the rewritten query is evaluated.
 
-    Interestingly the execution plan of the rewritten query stays the same as the one for the original query.
+    Interestingly, the execution plan of the rewritten query stays the same as the one for the original query.
     Therefore, the index \texttt{idx\_dept} which we created on the \textbf{Employee} table is not used.
     Hence, the evaluation of the rewritten query works exactly the same.
 
