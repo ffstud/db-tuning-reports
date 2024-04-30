@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS Employee (
     manager VARCHAR(64),
     dept VARCHAR(64),
     salary INTEGER,
-    numfriends INTEGER)
+    numfriends INTEGER);
 \end{lstlisting}
 
 We note that \texttt{ssnum} is the primary key of the table, hence Postgres automatically creates an B-Tree based,
@@ -131,14 +131,14 @@ As mentioned, such an index already exists for \texttt{ssnum}.
 Thus, we can \textit{cluster} this index according to \cite{PostgreSQL2024Cluster} by performing:
 
 \begin{lstlisting}[style=dbtsql]
-CLUSTER Employee USING idx_ssnum
+CLUSTER Employee USING idx_ssnum;
 \end{lstlisting}
 
 Here we assumed the index on \texttt{ssnum} to be named \texttt{idx\_ssnum}.
 
 If we had to create such an index by ourselves, one could accomplish this by performing:
 \begin{lstlisting}[style=dbtsql]
-CREATE UNIQUE INDEX idx_ssnum ON Employee [USING BTREE] (ssnum)
+CREATE UNIQUE INDEX idx_ssnum ON Employee [USING BTREE] (ssnum);
 \end{lstlisting}
 
 The additional command in parentheses \texttt{USING BTREE} is optional, since it already is the default for Postgres
@@ -148,14 +148,14 @@ Now in order to create a clustered hash index, we first need to create the index
 \cite{PostgreSQL2024IndexTypes}:
 
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX idx_ssnum ON Employee USING HASH (ssnum)
+CREATE INDEX idx_ssnum ON Employee USING HASH (ssnum);
 \end{lstlisting}
 
 We note that we now can no longer create a unique index, since it is not supported as mentioned before.
 Afterwards, we again can cluster this created index:
 
 \begin{lstlisting}[style=dbtsql]
-CLUSTER Employee USING idx_ssnum
+CLUSTER Employee USING idx_ssnum;
 \end{lstlisting}
 
 \paragraph{b)}
@@ -166,26 +166,29 @@ Yes, clustering indexes are also supported on non-key attributes.
 As mentioned earlier, we first need an index on name to cluster it:
 
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX idx_name on Employee (name)
+CREATE INDEX idx_name on Employee (name);
 \end{lstlisting}
 
-Followed by that, we can now cluster it by performing:
+Followed by that, we can now cluster this created index by performing:
 
 \begin{lstlisting}[style=dbtsql]
-CLUSTER Employee USING idx_name
+CLUSTER Employee USING idx_name;
 \end{lstlisting}
 
 \paragraph{c)}
 
 Is the clustering index dense or sparse?
 
-\youranswerhere{}
+In general, Postgres only supports dense indexes \cite{SO_PostgresDenseSpare}.
+Hence, clustering indexes are dense as well.
+The only exception from this is the GIN index type, which is a somewhat sparse index.
 
 \paragraph{d)}
 
-How does the system deal with overflows in clustering indexes? How is the fill factor controlled?
+How does the system deal with overflows in clustering indexes?
+How is the fill factor controlled?
 
-\youranswerhere{}
+According to \cite{PostgreSQL2024CreateIndex}
 
 \paragraph{e)}
 
