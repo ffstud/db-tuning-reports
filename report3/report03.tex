@@ -175,13 +175,30 @@ The only exception from this is the GIN index type, which is a somewhat sparse i
 How does the system deal with overflows in clustering indexes?
 How is the fill factor controlled?
 
-According to \cite{PostgreSQL2024CreateIndex}
+According to \cite{PostgreSQL2024CreateIndex}, Postgres fills the index pages up to the provided \texttt{fillfactor}.
+Once such an index page reached the configured \texttt{fillfactor}, it gets split up.
+This split leads to a decrease in efficiency for index lookups.
+
+The \texttt{fillfactor} itself represents a percentage of how many entries are placed inside a page before a split happens.
+It can be set during the creation of an index, e.g.:
+
+\begin{lstlisting}[style=dbtsql]
+CREATE UNIQUE INDEX idx_name ON Employee (name) WITH (fillfactor = 70);
+\end{lstlisting}
+
+Per default, the \texttt{fillfactor} is set to 70\% for B-Tree indexes.
 
 \paragraph{e)}
 
 Discuss any further characteristics of the system related to clustering indexes that are relevant to a database tuner.
 
-\youranswerhere{}
+For clustering indexes it is important to note, that \texttt{CLUSTER} itself is a one-time operation, where the
+sorting of the table does not get maintained by Postgres.
+This means that as soon as any updates to the table were made, Postgres does not ensure that the \textit{clustering}
+property is still satisfied.
+Hence, when performing a \texttt{CLUSTER} command, only the rows that are currently inside the table are affected.
+
+Additionally, during the clustering process the table is locked for any other read or write accesses \cite{PostgreSQL2024Cluster}.
 
 \subsection{Non-Clustering Indexes}
 
