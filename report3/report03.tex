@@ -222,8 +222,9 @@ Can the system take advantage of covering indexes? What if the index covers the 
 Taking advantage of covering indexes with \texttt{index-only scans} is only possible under the following restrictions:
 
 \begin{enumerate}
-    \item Index type must support index-only scans. B-Tree always supports it, while GiST and GIN only support it for some operator classes.
+    \item Index type must support index-only scans. \texttt{B-Tree} always supports it, while \texttt{GiST} and \texttt{GIN} only support it for some operator classes.
     \item The query must reference only columns that are part of the index.
+    Columns can be added to a covering index by using the \texttt{INCLUDE} clause.
 \end{enumerate}
 
 \paragraph{c)}
