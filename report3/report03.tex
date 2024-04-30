@@ -51,58 +51,45 @@
 
 Which index data structures (e.g., B$^+$ tree index) are supported?
 
-\begin{itemize}
-  \item B-Tree \cite{PostgreSQL2024IndexTypes}
-  \begin{itemize}
-    \item Default when using \texttt{CREATE INDEX}
-    \item   \begin{lstlisting}[style=dbtsql]
+\subsubsection*{B-Tree \cite{PostgreSQL2024IndexTypes}}
+Default when using \texttt{CREATE INDEX}
+\begin{lstlisting}[style=dbtsql]
 CREATE INDEX index_name ON table_name (column_name);
-    \end{lstlisting}
-  \end{itemize}
+\end{lstlisting}
 
-  \item Hash \cite{PostgreSQL2024IndexTypes}
-  \begin{itemize}
-    \item Hash index stores 32-bit hash derived from indexed column
-    \item Only supports equality comparisons
-    \item  \begin{lstlisting}[style=dbtsql]
+\subsubsection*{Hash \cite{PostgreSQL2024IndexTypes}}
+Hash index stores 32-bit hash derived from the indexed column. Only supports equality comparisons.
+\begin{lstlisting}[style=dbtsql]
 CREATE INDEX index_name ON table_name USING HASH (column_name);
-             \end{lstlisting}
-  \end{itemize}
-  \item GiST \cite{PostgreSQL2024IndexTypes} \cite{PostgreSQL2024GistGin}
-  \begin{itemize}
-    \item \enquote{Generalized Search Tree}
-    \item Infrastructure of many index strategies
-    \item Lossy index (may produce false matches)
-    \item \begin{lstlisting}[style=dbtsql]
+\end{lstlisting}
+
+\subsubsection*{GiST \cite{PostgreSQL2024IndexTypes} \cite{PostgreSQL2024GistGin}}
+\enquote{Generalized Search Tree}, an infrastructure for many index strategies and is a lossy index (may produce false matches).
+\begin{lstlisting}[style=dbtsql]
 CREATE INDEX index_name ON table_name USING gist(column_name);
-    \end{lstlisting}
-  \end{itemize}
-  \item SP-GiST \cite{PostgreSQL2024IndexTypes}
-  \begin{itemize}
-    \item \enquote{Space-partitioned GiST}
-    \item Non-balanced data structures
-    \item \begin{lstlisting}[style=dbtsql]
+\end{lstlisting}
+
+\subsubsection*{SP-GiST \cite{PostgreSQL2024IndexTypes}}
+\enquote{Space-partitioned GiST}, focuses on non-balanced data structures.
+\begin{lstlisting}[style=dbtsql]
 CREATE INDEX index_name ON table_name USING spgist(column_name);
 \end{lstlisting}
-  \end{itemize}
-  \item GIN \cite{PostgreSQL2024IndexTypes} \cite{PostgreSQL2024GistGin}
-  \begin{itemize}
-    \item \enquote{Generalized Inverted Index}
-    \item Supports many different indexing strategies
-    \item Appropriate for values containing multiple component, e.g.: arrays
-    \begin{lstlisting}[style=dbtsql]
+
+\subsubsection*{GIN \cite{PostgreSQL2024IndexTypes} \cite{PostgreSQL2024GistGin}}
+\enquote{Generalized Inverted Index} suitable for values containing multiple components, e.g., arrays.
+\begin{lstlisting}[style=dbtsql]
 CREATE INDEX index_name ON table_name USING gin(column_name);
-    \end{lstlisting}
-  \end{itemize}
-  \item BRIN \cite{PostgreSQL2024IndexTypes}
-  \begin{itemize}
-    \item \enquote{Block Range INdex}
-    \item Indexes ranges of values
-    \item \begin{lstlisting}[style=dbtsql]
+\end{lstlisting}
+
+\subsubsection*{BRIN \cite{PostgreSQL2024IndexTypes}}
+\enquote{Block Range INdex} indexes ranges of values.
+\begin{lstlisting}[style=dbtsql]
 CREATE INDEX index_name ON table_name USING brin(column_name);
-    \end{lstlisting}
-  \end{itemize}
-\end{itemize}
+\end{lstlisting}
+
+\subsubsection*{Extensions \cite{PostgreSQL2024Bloom}}
+Postgres also supports the \texttt{bloom} extension.
+The bloom filter data structure is used to check if an element is a member of a set.
 
 \subsection{Clustering Indexes}
 
