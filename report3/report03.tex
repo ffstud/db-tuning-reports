@@ -228,9 +228,17 @@ Discuss any further characteristics of the system related to non-clustering inde
 
 \subsection{Key Compression and Page Size}
 
-If your system supports B$^+$ trees, what kind of key compression (if any) is supported? How large is the default disk page? Can it be changed?
+If your system supports B$^+$ trees, what kind of key compression (if any) is supported?
+How large is the default disk page?
+Can it be changed?
 
-\youranswerhere{}
+The documentation of Postgres lacks an explanation if key compression is supported in the version we are making use of.
+Even through additional research we were not able to find any hints that this feature is implemented in Postgres.
+Hence, one has to assume that Postgres does not support key compression to this point.
+
+The default size of a disk page equals 8 kilobytes.
+According to \cite{PostgreSQL2024DiskUsage} it does not seem as one can change this value easily by tools or commands
+that are directly supported from Postgres itself.
 
 \subsection*{Time Spent on this Assignment}
 
