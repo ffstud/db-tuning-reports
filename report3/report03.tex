@@ -54,37 +54,37 @@ Which index data structures (e.g., B$^+$ tree index) are supported?
 \subsubsection*{B-Tree \cite{PostgreSQL2024IndexTypes}}
 Default when using \texttt{CREATE INDEX}
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX index_name ON table_name (column_name);
+CREATE INDEX idx_name ON table_name (column_name);
 \end{lstlisting}
 
 \subsubsection*{Hash \cite{PostgreSQL2024IndexTypes}}
 Hash index stores 32-bit hash derived from the indexed column. Only supports equality comparisons.
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX index_name ON table_name USING HASH (column_name);
+CREATE INDEX idx_name ON table_name USING HASH (column_name);
 \end{lstlisting}
 
 \subsubsection*{GiST \cite{PostgreSQL2024IndexTypes} \cite{PostgreSQL2024GistGin}}
 \enquote{Generalized Search Tree}, an infrastructure for many index strategies and is a lossy index (may produce false matches).
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX index_name ON table_name USING gist(column_name);
+CREATE INDEX idx_name ON table_name USING GIST(column_name);
 \end{lstlisting}
 
 \subsubsection*{SP-GiST \cite{PostgreSQL2024IndexTypes}}
 \enquote{Space-partitioned GiST}, focuses on non-balanced data structures.
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX index_name ON table_name USING spgist(column_name);
+CREATE INDEX idx_name ON table_name USING SPGIST(column_name);
 \end{lstlisting}
 
 \subsubsection*{GIN \cite{PostgreSQL2024IndexTypes} \cite{PostgreSQL2024GistGin}}
 \enquote{Generalized Inverted Index} suitable for values containing multiple components, e.g., arrays.
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX index_name ON table_name USING gin(column_name);
+CREATE INDEX idx_name ON table_name USING GIN(column_name);
 \end{lstlisting}
 
 \subsubsection*{BRIN \cite{PostgreSQL2024IndexTypes}}
 \enquote{Block Range INdex} indexes ranges of values.
 \begin{lstlisting}[style=dbtsql]
-CREATE INDEX index_name ON table_name USING brin(column_name);
+CREATE INDEX idx_name ON table_name USING BRIN(column_name);
 \end{lstlisting}
 
 \subsubsection*{Extensions \cite{PostgreSQL2024Bloom}}
@@ -208,17 +208,23 @@ Discuss how the system supports non-clustering indexes, in particular:
 
 How do you create a combined, non-clustering index on \texttt{(dept,salary)}? Show the query.$^1$
 
-\youranswerhere{}
+Postgres uses non-clustering indexes per default \cite{SO_PostgresClusterVsNonCluster}.
+Only B-tree, GiST, GIN, and BRIN indexes support combined indexes in Postgres \cite{PostgreSQL2024MultiColumnIndex}.
 
 \begin{lstlisting}[style=dbtsql]
-[Your SQL query goes here ...]
+CREATE INDEX idx_dept_salary ON Employee [USING BTREE] (dept, salary);
 \end{lstlisting}
 
 \paragraph{b)}
 
 Can the system take advantage of covering indexes? What if the index covers the query, but the condition is not a prefix of the attribute sequence \texttt{(dept,salary)}?
 
-\youranswerhere{}
+Taking advantage of covering indexes with \texttt{index-only scans} is only possible under the following restrictions:
+
+\begin{enumerate}
+    \item Index type must support index-only scans. B-Tree always supports it, while GiST and GIN only support it for some operator classes.
+    \item The query must reference only columns that are part of the index.
+\end{enumerate}
 
 \paragraph{c)}
 
