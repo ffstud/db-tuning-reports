@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS Employee (
 \end{lstlisting}
 
 We note that \texttt{ssnum} is the primary key of the table, hence Postgres automatically creates an B-Tree based,
-\textit{unique index} for it \cite{PostgreSQL2023Unique}.
+\textit{unique index} for it \cite{PostgreSQL2024Unique}.
 
 Now to be able to create a clustering index, we need an index to begin with.
-As discussed earlier, such an index already exists for \texttt{ssnum}.
-Thus, we can \textit{cluster} this index according to \cite{PostgreSQL2023Cluster} by performing:
+As mentioned, such an index already exists for \texttt{ssnum}.
+Thus, we can \textit{cluster} this index according to \cite{PostgreSQL2024Cluster} by performing:
 
 \begin{lstlisting}[style=dbtsql]
 CLUSTER Employee USING idx_ssnum
@@ -87,18 +87,31 @@ Here we assumed the index on \texttt{ssnum} to be named \texttt{idx\_ssnum}.
 
 If we had to create such an index by ourselves, one could accomplish this by performing:
 \begin{lstlisting}[style=dbtsql]
-CREATE UNIQUE INDEX idx_ssnum ON Employee [using btree] (ssnum)
+CREATE UNIQUE INDEX idx_ssnum ON Employee [USING BTREE] (ssnum)
 \end{lstlisting}
 
-The additional command in parentheses \texttt{using btree} is optional, since it already is the default for Postgres
-(and Postgres only supports unique indexes using B-Trees) \cite{PostgreSQL2023Unique}.
+The additional command in parentheses \texttt{USING BTREE} is optional, since it already is the default for Postgres
+(and Postgres only supports unique indexes using B-Trees) \cite{PostgreSQL2024Unique}.
+
+Now in order to create a clustered hash index, we first need to create the index itself following
+\cite{PostgreSQL2024IndexTypes}:
+
+\begin{lstlisting}[style=dbtsql]
+CREATE INDEX idx_ssnum ON Employee USING HASH (ssnum)
+\end{lstlisting}
+
+We note that we now can no longer create a unique index, since it is not supported as mentioned before.
+Afterwards, we again can cluster this created index:
+
+\begin{lstlisting}[style=dbtsql]
+CLUSTER Employee USING idx_ssnum
+\end{lstlisting}
 
 \paragraph{b)}
 
 Are clustering indexes on non-key attributes supported, e.g., on \texttt{name}? Show the query.
 
 Yes, clustering indexes are also supported on non-key attributes.
-
 As mentioned earlier, we first need an index on name to cluster it:
 
 \begin{lstlisting}[style=dbtsql]
