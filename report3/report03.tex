@@ -231,7 +231,10 @@ Taking advantage of covering indexes with \texttt{index-only scans} is only poss
 
 Discuss any further characteristics of the system related to non-clustering indexes that are relevant to a database tuner.
 
-\youranswerhere{}
+Like mentioned before, non-cluster itself is a default index type of Postgres, so preparing a non-clustered Index has no affection to the table itself, the index will always get created once by a dense primary key.
+This means also with every update to the table, Postgres also ensures that the index is still be satisfied, and concurrently it avoids overflows.
+
+Additionally, the query of a non-clustered index is inefficient if your using a multipoint query or don't cover the index correctly in the selection. \cite{SlidesIndexTuning}
 
 \subsection{Key Compression and Page Size}
 
