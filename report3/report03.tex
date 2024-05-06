@@ -222,19 +222,71 @@ Can the system take advantage of covering indexes? What if the index covers the 
 Taking advantage of covering indexes with \texttt{index-only scans} is only possible under the following restrictions:
 
 \begin{enumerate}
-    \item Index type must support index-only scans. \texttt{B-Tree} always supports it, while \texttt{GiST} and \texttt{GIN} only support it for some operator classes.
+    \item Index type must support index-only scans. \texttt{B-Tree} always supports it, while \texttt{GiST} and
+    \texttt{GIN} only support it for some operator classes.
     \item The query must reference only columns that are part of the index.
     Columns can be added to a covering index by using the \texttt{INCLUDE} clause.
 \end{enumerate}
 
+When these criteria are met, then the system can take advantage of covering indexes.
+
+Assume an index like the one created in 3a.
+When executing a covered, but non-prefix query like
+
+\begin{lstlisting}[style=dbtsql]
+SELECT dept
+FROM Employee
+WHERE salary < 48000;
+\end{lstlisting}
+
+then the DBMS reads the table sequentially and does not make use of the index, since the table is primarily sorted by the
+\texttt{dept} attribute.
+
 \paragraph{c)}
 
-Discuss any further characteristics of the system related to non-clustering indexes that are relevant to a database tuner.
+Some additional relevant characteristics/features are:
 
-Like mentioned before, non-cluster itself is a default index type of Postgres, so preparing a non-clustered Index has no affection to the table itself, the index will always get created once by a dense primary key.
-This means also with every update to the table, Postgres also ensures that the index is still be satisfied, and concurrently it avoids overflows.
+\begin{itemize}
+    \item \textbf{Partial indexes} \cite{PostgreSQL2024IndexesPartial}:\\
+    Additionally, one can create a partial index on attributes.
+    This might be useful to keep the index small and still be able to cover recurring queries which select certain
+    value ranges.
+    For example:
+    \begin{lstlisting}[style=dbtsql]
+CREATE INDEX idx_salary ON Employee (salary)
+WHERE salary < 100000;
+    \end{lstlisting}
+    \item \textbf{Order of the index} \cite{PostgreSQL2024IndexesOrdering}:\\
+    With Postgres it is possible to influence the order of the index by using \texttt{ORDER By}, which is especially
+    useful for multi-column indexes.
+    One can use the following keywords when creating an index:
+    \begin{itemize}
+        \item ASC
+        \item DESC
+        \item NULLS FIRST
+        \item NULLS LAST
+    \end{itemize}
+    For example:
+    \begin{lstlisting}[style=dbtsql]
+CREATE INDEX idx_id_desc ON test (id DESC NULLS LAST);
+    \end{lstlisting}
 
-Additionally, the query of a non-clustered index is inefficient if your using a multipoint query or don't cover the index correctly in the selection. \cite{SlidesIndexTuning}
+    It is important to note, that such an ordering can make an index unusable in certain scenarios, i.e. when executing
+    a query with a different \texttt{ORDER BY}.
+    \item \textbf{Indexes on Expressions} \cite{PostgreSQL2024IndexesOnExpressions}:
+    Postgres not only supports indexes on attributes alone, but also on functions or scalar expressions computed on
+    attributes.
+    For example, one could create an index
+    \begin{lstlisting}[style=dbtsql]
+CREATE INDEX idx_col1_lower ON test (lower(col1));
+    \end{lstlisting}
+    to perform a fast case-insensitive comparison when executing queries like
+    \begin{lstlisting}[style=dbtsql]
+SELECT * FROM test WHERE lower(col1) = 'value';
+    \end{lstlisting}
+\end{itemize}
+
+
 
 \subsection{Key Compression and Page Size}
 
@@ -254,9 +306,9 @@ that are directly supported from Postgres itself.
 
 Time in hours per person:
 \begin{itemize}
-  \item Florian Frauenschuh: \textbf{}
-  \item Peter Lindner: \textbf{}
-  \item Alexander Weilert: \textbf{}
+  \item Florian Frauenschuh: \textbf{5.5}
+  \item Peter Lindner: \textbf{6}
+  \item Alexander Weilert: \textbf{5}
 \end{itemize}
 
 \pagebreak
