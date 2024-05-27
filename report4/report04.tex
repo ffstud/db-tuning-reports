@@ -121,8 +121,8 @@ For each query a random existing \texttt{pubID} was chosen.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 1985347 \\
-\textbf{Queries per Second: } 33089.12
+\textbf{Executed Queries: } 2003130 \\
+\textbf{Queries per Second: } 33385.5
 
 Query plan (for one of the queries):
 
@@ -160,12 +160,12 @@ condition, since an author is always given.
 Show the runtime results and compute the throughput.
 
 \textbf{Multipoint Query}\\
-\textbf{Executed Queries: } 146054\\
-\textbf{Queries per Second: } 2434.23
+\textbf{Executed Queries: } 153010\\
+\textbf{Queries per Second: } 2550.17 \\
 
 \textbf{Multipoint Query IN-Predicate}\\
-\textbf{Executed Queries: } 82317\\
-\textbf{Queries per Second: } 1371.95
+\textbf{Executed Queries: } 83734\\
+\textbf{Queries per Second: } 1395.57
 
 Query plan (for one of the queries):
 
@@ -223,8 +223,8 @@ Same as before, we are using random years from the dataset.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 2463\\
-\textbf{Queries per Second: } 41.05
+\textbf{Executed Queries: } 2422\\
+\textbf{Queries per Second: } 40.37
 
 Query plan (for one of the queries):
 
@@ -256,8 +256,8 @@ For each query a random existing \texttt{pubID} was chosen.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 1973107\\
-\textbf{Queries per Second: } 32885.11
+\textbf{Executed Queries: } 2040997\\
+\textbf{Queries per Second: } 34016.62
 
 Query plan (for one of the queries):
 
@@ -294,12 +294,12 @@ condition, since an author is always given.
 Show the runtime results and compute the throughput.
 
 \textbf{Multipoint Query}\\
-\textbf{Executed Queries: } 147930\\
-\textbf{Queries per Second: } 2465.5\\
+\textbf{Executed Queries: } 149266\\
+\textbf{Queries per Second: } 2487.77 \\
 
 \textbf{Multipoint Query IN-Predicate}\\
-\textbf{Executed Queries: } 80356\\
-\textbf{Queries per Second: } 1339.27
+\textbf{Executed Queries: } 64079\\
+\textbf{Queries per Second: } 1067.98
 
 Query plan (for one of the queries):
 
@@ -354,8 +354,8 @@ Same as before, we are using random years from the dataset.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 2482\\
-\textbf{Queries per Second: } 41.37
+\textbf{Executed Queries: } 1368\\
+\textbf{Queries per Second: } 22.8
 
 Query plan (for one of the queries):
 
@@ -393,8 +393,8 @@ For each query a random existing \texttt{pubID} was chosen.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 2369970\\
-\textbf{Queries per Second: } 39499.5
+\textbf{Executed Queries: } 2618888\\
+\textbf{Queries per Second: } 43648.13
 
 Query plan (for one of the queries):
 
@@ -432,12 +432,12 @@ condition, since an author is always given.
 Show the runtime results and compute the throughput.
 
 \textbf{Multipoint Query}\\
-\textbf{Executed Queries: } 136126\\
-\textbf{Queries per Second: } 2268.77\\
+\textbf{Executed Queries: } 137115\\
+\textbf{Queries per Second: } 2285.25 \\
 
 \textbf{Multipoint Query IN-Predicate}\\
-\textbf{Executed Queries: } 172501\\
-\textbf{Queries per Second: } 2875.02
+\textbf{Executed Queries: } 114494\\
+\textbf{Queries per Second: } 1908.23
 
 Query plan (for one of the queries):
 
@@ -490,8 +490,8 @@ Same as before, we are using random years from the dataset.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 2214\\
-\textbf{Queries per Second: } 36.9
+\textbf{Executed Queries: } 1318\\
+\textbf{Queries per Second: } 21.97
 
 Query plan (for one of the queries):
 
@@ -526,8 +526,8 @@ For each query a random existing \texttt{pubID} was chosen.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 2080\\
-\textbf{Queries per Second: } 34.67
+\textbf{Executed Queries: } 2152\\
+\textbf{Queries per Second: } 35.87
 
 Query plan (for one of the queries):
 
@@ -572,12 +572,12 @@ condition, since an author is always given.
 Show the runtime results and compute the throughput.
 
 \textbf{Multipoint Query}\\
-\textbf{Executed Queries: } 1771\\
-\textbf{Queries per Second: } 29.52\\
+\textbf{Executed Queries: } 1808\\
+\textbf{Queries per Second: } 30.13 \\
 
 \textbf{Multipoint Query IN-Predicate}\\
 \textbf{Executed Queries: } 342\\
-\textbf{Queries per Second: } 5.7
+\textbf{Queries per Second: } 5.70
 
 Query plan (for one of the queries):
 
@@ -644,8 +644,8 @@ Same as before, we are using random years from the dataset.
 
 Show the runtime results and compute the throughput.
 
-\textbf{Executed Queries: } 1069\\
-\textbf{Queries per Second: } 17.82
+\textbf{Executed Queries: } 1276\\
+\textbf{Queries per Second: } 21.27
 
 Query plan (for one of the queries):
 
@@ -689,8 +689,13 @@ Give the throughput of the query types and index types in queries/second.
 
 Discuss the runtime results for the different index types and the table scan. Are the results expected? Why (not)?
 
-Firstly, the table scan is the slowest method for all query types, which is the expected result, as there is no index
-at all.
+Firstly, lets look at the point query.
+The clustering and non-clustering B$^+$ tree indexes have a similar throughput.
+The non-clustering hash index has the highest throughput, which is expected, as hash indexes are faster for point queries.
+As Expected, the table scan has the lowest throughput, as there is no index that can be used.
+
+Regarding the multipoint query with low selectivity, the B$^+$ indexes performed very similarly, while the hash index
+performed slightly worse.
 
 \subsection*{Time Spent on this Assignment}
 
