@@ -674,28 +674,43 @@ Give the throughput of the query types and index types in queries/second.
     & clustering & non-clust.\ B$^+$ tree & non-clust.\ hash & table scan
       \tabularnewline
     \hline
-    point (\texttt{pubID}) & 33089.12 & 32885.12 & 39499.50 & 34.67 \tabularnewline
+    point (\texttt{pubID}) & 33385.5 & 34016.62 & 43648.13 & 35.86 \tabularnewline
     \hline
-    multipoint (\texttt{booktitle}) & 2434.23 & 2465.50 & 2268.77 & 29.52
+    multipoint (\texttt{booktitle}) & 2550.17 & 2487.77 & 2285.25 & 30.13
       \tabularnewline
     \hline
-		multipoint-IN (\texttt{pubID}) & 1371.95 & 1339.27 & 2875.02 & 5.70
+		multipoint-IN (\texttt{pubID}) & 1395.56 & 1067.98 & 1908.23 & 5.70
       \tabularnewline
 		\hline
-    multipoint (\texttt{year}) & 41.05 & 41.37 & 36.90 & 17.82
+    multipoint (\texttt{year}) & 40.37 & 22.8 & 21.96 & 21.27
       \tabularnewline
   \end{tabular}
 \end{table}
 
 Discuss the runtime results for the different index types and the table scan. Are the results expected? Why (not)?
 
-Firstly, lets look at the point query.
+Firstly, we will look at the point query.
 The clustering and non-clustering B$^+$ tree indexes have a similar throughput.
 The non-clustering hash index has the highest throughput, which is expected, as hash indexes are faster for point queries.
 As Expected, the table scan has the lowest throughput, as there is no index that can be used.
 
-Regarding the multipoint query with low selectivity, the B$^+$ indexes performed very similarly, while the hash index
-performed slightly worse.
+Regarding the multipoint query with low selectivity, the B$^+$ indexes and the hash index performed somewhat similarly.
+The clustering B$^+$ index had the highest throughput, which makes sense since the clustering index sorts the data
+by the indexed attribute, which benefits ranged queries.
+Again, the table scan had the lowest throughput.
+
+For the multipoint query with the IN-Predicate, the Hash index outperformed the B$^+$ indexes.
+This outcome is quite interesting; from a naive perspective, one would expect the clustered B$^+$ index to perform
+better than the hash index.
+However, since there are multiple exact mathes involved in the IN-Predicate, the hash index is faster.
+And just like with the previous queries, the table scan had the lowest throughput.
+
+Lastly, for the multipoint query with high selectivity, the clustering B$^+$ index had the highest throughput, having
+almost double the throughput of all the other methods.
+This is expected, as the sorting of the data helps a lot with this type of query.
+The rest performed similarly, but the table scan still had the lowest throughput.
+
+
 
 \subsection*{Time Spent on this Assignment}
 
