@@ -689,6 +689,8 @@ Give the throughput of the query types and index types in queries/second.
 
 Discuss the runtime results for the different index types and the table scan. Are the results expected? Why (not)?
 
+\includegraphics[width=\textwidth]{resources/throughput.png}
+
 Firstly, we will look at the point query.
 The clustering and non-clustering B$^+$ tree indexes have a similar throughput.
 The non-clustering hash index has the highest throughput, which is expected, as hash indexes are faster for point queries.
