@@ -135,7 +135,8 @@ Planning Time: 0.189 ms
 Execution Time: 0.067 ms
 \end{verbatim}}
 
-An index scan on the \texttt{pubID} is performed, which make use of the B$^+$ tree index.
+An index scan with the index \texttt{idx\_clustering\_pubid} on the row \texttt{pubID} is performed, which make use of the B$^+$ tree index.
+Here the \texttt{pubID} is compared with a string.
 
 \paragraph{Multipoint Query vs. Multipoint Query IN-Predicate -- Low Selectivity}
 
@@ -179,7 +180,7 @@ Planning Time: 0.058 ms
 Execution Time: 0.035 ms
 \end{verbatim}}
 
-Again, the query plan shows an B$^+$ tree index scan on the \texttt{booktitle}.
+Similar to \texttt{pubid}, we again use a simple clustered index and compare it to a string, but now with the attribute \texttt{booktitle}.
 
 \textbf{Multipoint Query IN-Predicate}
 {\small
@@ -203,11 +204,13 @@ Planning Time: 0.824 ms
 Execution Time: 4.625 ms
 \end{verbatim}}
 
-This query plan is significantly more complex, as it involves a nested loop and a hash aggregate.
-First, an index scan is performed on the \texttt{name} attribute of the \texttt{auth} table, followed by a hash aggregate
-operation, due to the use of the \texttt{IN} predicate.
-Then, an index scan is performed on the \texttt{pubID} attribute of the \texttt{publ} table.
-Finally, the results are joined using a nested loop.
+This query plan is significantly more complex because it involves a nested loop and a hash aggregate.
+The plan additionally uses a group key for the booktitle attribute.
+First, an index scan is performed on the \texttt{name} attribute of the \texttt{auth} table, comparing three different strings of type name, followed by a hash aggregate
+operation due to the use of the \texttt{IN} predicate.
+An index scan is then performed on the \texttt{pubID} attribute of the \texttt{publ} table, comparing the group key of the inner selection.
+Finally, the results are linked using a nested loop.
+
 
 \paragraph{Multipoint Query -- High Selectivity}
 
@@ -236,7 +239,8 @@ Index Scan using idx_clustering_year on publ  (cost=0.43..2068.83 rows=52823 wid
 Planning Time: 0.054 ms
 Execution Time: 7.923 ms
 \end{verbatim}}
-Similar to the previous query plans, an index scan is performed on the \texttt{year} attribute.
+
+Similar to the previous query plans, an index scan comparing a string is performed on the \texttt{year} attribute using the index \texttt{idx\_clustering\_year}.
 
 \subsection*{Non-Clustering B$^+$ Tree Index}
 
@@ -269,7 +273,9 @@ Index Scan using idx_clustering_pubid on publ  (cost=0.43..8.45 rows=1 width=112
 Planning Time: 0.052 ms
 Execution Time: 0.034 ms
 \end{verbatim}}
+
 The query makes use of the B$^+$ tree index on the \texttt{pubID} attribute, just as with the clustering index.
+The main difference is that in a clustered index the table is sorted by the index, which is not the case here.
 
 \paragraph{Multipoint Query vs. Multipoint Query IN-Predicate -- Low Selectivity}
 
@@ -311,33 +317,41 @@ Index Scan using idx_clustering_booktitle on publ  (cost=0.43..661.90 rows=179 w
   Index Cond: ((booktitle)::text = 'Modern Database Systems'::text)
 Planning Time: 0.172 ms
 Execution Time: 0.061 ms
-
 \end{verbatim}}
 
 Again an index scan is performed on the \texttt{booktitle} attribute of the \texttt{publ} table.
+As previously we use the index for the string comparison instead of the unsorted table.
 
 \textbf{Multipoint Query IN-Predicate}
 {\small
 \parskip0pt\begin{verbatim}
-Nested Loop  (cost=303.62..938.06 rows=75 width=112) (actual time=1.741..6.267 rows=294 loops=1)
-  ->  HashAggregate  (cost=303.19..303.94 rows=75 width=23) (actual time=1.702..1.752 rows=294 loops=1)
+Nested Loop  (cost=303.62..938.06 rows=75 width=112)
+             (actual time=1.741..6.267 rows=294 loops=1)
+  ->  HashAggregate  (cost=303.19..303.94 rows=75 width=23)
+                     (actual time=1.702..1.752 rows=294 loops=1)
         Group Key: (auth.pubid)::text
         Batches: 1  Memory Usage: 77kB
-        ->  Bitmap Heap Scan on auth  (cost=13.87..303.00 rows=75 width=23) (actual time=0.105..1.573 rows=294 loops=1)"
-              Recheck Cond: ((name)::text = ANY ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
+        ->  Bitmap Heap Scan on auth  (cost=13.87..303.00 rows=75 width=23)
+                                      (actual time=0.105..1.573 rows=294 loops=1)"
+              Recheck Cond: ((name)::text = ANY
+                          ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
               Heap Blocks: exact=206
-              ->  Bitmap Index Scan on idx_clustering_name  (cost=0.00..13.85 rows=75 width=0) (actual time=0.085..0.085 rows=294 loops=1)"
-                    Index Cond: ((name)::text = ANY ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
-  ->  Index Scan using idx_clustering_pubid on publ  (cost=0.43..8.45 rows=1 width=112) (actual time=0.015..0.015 rows=1 loops=294)
+              ->  Bitmap Index Scan on idx_clustering_name
+                                        (cost=0.00..13.85 rows=75 width=0)
+                                        (actual time=0.085..0.085 rows=294 loops=1)"
+                    Index Cond: ((name)::text = ANY
+                          ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
+  ->  Index Scan using idx_clustering_pubid on publ
+                                        (cost=0.43..8.45 rows=1 width=112)
+                                        (actual time=0.015..0.015 rows=1 loops=294)
         Index Cond: ((pubid)::text = (auth.pubid)::text)
 Planning Time: 0.677 ms
 Execution Time: 6.316 ms
 \end{verbatim}}
 
-First, an index scan with the three chosen authors as in the condition is performed on the name index of the \texttt{auth}
-table.
-Then, similarly to the clustering index, the hash aggregate operation is performed, followed by an index scan on the
-\texttt{pubID} attribute of the \texttt{publ} table.
+Similar to the clustered Index, Postgres makes use of a HashAggregate to begin and in the end using a Nested Loop Join and an Index scan on publ.
+The main difference from cluster selection is that it starts with a bitmap index scan in combination with a bitmap heap scan, which selects the three selected authors, as in the \texttt{auth} name index condition.
+Then, similarly to the clustering index, the hash aggregate operation is performed, followed by an index scan on the \texttt{pubID} attribute of the \texttt{publ} table.
 Finally, the results are joined using a nested loop.
 
 \paragraph{Multipoint Query -- High Selectivity}
@@ -408,6 +422,7 @@ Execution Time: 0.025 ms
 \end{verbatim}}
 
 For this plan an index scan is again performed on the \texttt{pubID} attribute of the \texttt{publ} table.
+Similar to every other scans on \texttt{pubID}
 
 \paragraph{Multipoint Query vs. Multipoint Query IN-Predicate -- Low Selectivity}
 
@@ -453,21 +468,30 @@ Planning Time: 0.209 ms
 Execution Time: 0.058 ms
 \end{verbatim}}
 
-Unlike the B$^+$ tree index, the hash index performs a Bitmap Index Scan on \texttt{booktitle} and a Bitmap Heap Scan.
+Unlike the B$^+$ tree index, the hash index performs a Bitmap Index Scan on \texttt{booktitle} in combination with a Bitmap Heap Scan.
 
 \textbf{Multipoint Query IN-Predicate}
 {\small
 \parskip0pt\begin{verbatim}
-Nested Loop  (cost=298.12..892.90 rows=74 width=112) (actual time=1.236..4.378 rows=294 loops=1)
-  ->  HashAggregate  (cost=298.12..298.86 rows=74 width=23) (actual time=1.201..1.240 rows=294 loops=1)
+Nested Loop  (cost=298.12..892.90 rows=74 width=112)
+             (actual time=1.236..4.378 rows=294 loops=1)
+  ->  HashAggregate  (cost=298.12..298.86 rows=74 width=23)
+                     (actual time=1.201..1.240 rows=294 loops=1)
         Group Key: (auth.pubid)::text
         Batches: 1  Memory Usage: 77kB
-        ->  Bitmap Heap Scan on auth  (cost=12.58..297.94 rows=74 width=23) (actual time=0.038..1.110 rows=294 loops=1)"
-              Recheck Cond: ((name)::text = ANY ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
+        ->  Bitmap Heap Scan on auth  (cost=12.58..297.94 rows=74 width=23)
+                                      (actual time=0.038..1.110 rows=294 loops=1)"
+              Recheck Cond: ((name)::text = ANY
+                          ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
               Heap Blocks: exact=206
-              ->  Bitmap Index Scan on idx_clustering_name  (cost=0.00..12.56 rows=74 width=0) (actual time=0.023..0.023 rows=294 loops=1)"
-                    Index Cond: ((name)::text = ANY ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
-  ->  Index Scan using idx_clustering_pubid on publ  (cost=0.00..8.02 rows=1 width=112) (actual time=0.010..0.010 rows=1 loops=294)
+              ->  Bitmap Index Scan on idx_clustering_name
+                            (cost=0.00..12.56 rows=74 width=0)
+                            (actual time=0.023..0.023 rows=294 loops=1)"
+                    Index Cond: ((name)::text = ANY
+                             ('{""William Kent"",""Alfons Kemper"",""Walid G. Aref""}'::text[]))"
+  ->  Index Scan using idx_clustering_pubid on publ
+                             (cost=0.00..8.02 rows=1 width=112)
+                             (actual time=0.010..0.010 rows=1 loops=294)
         Index Cond: ((pubid)::text = (auth.pubid)::text)
 Planning Time: 0.410 ms
 Execution Time: 4.417 ms
@@ -497,16 +521,19 @@ Query plan (for one of the queries):
 
 {\small
 \parskip0pt\begin{verbatim}
-Bitmap Heap Scan on publ  (cost=1598.36..24675.34 rows=51918 width=113) (actual time=3.368..65.578 rows=50803 loops=1)
+Bitmap Heap Scan on publ  (cost=1598.36..24675.34 rows=51918 width=113)
+                          (actual time=3.368..65.578 rows=50803 loops=1)
   Recheck Cond: ((year)::text = '2000'::text)
   Heap Blocks: exact=12941
-  ->  Bitmap Index Scan on idx_clustering_year  (cost=0.00..1585.38 rows=51918 width=0) (actual time=2.102..2.103 rows=50803 loops=1)
+  ->  Bitmap Index Scan on idx_clustering_year
+                          (cost=0.00..1585.38 rows=51918 width=0)
+                          (actual time=2.102..2.103 rows=50803 loops=1)
         Index Cond: ((year)::text = '2000'::text)
 Planning Time: 0.160 ms
 Execution Time: 66.916 ms
 \end{verbatim}}
 
-Here another Bitmap Index Scan with a Bitmap Heap Scan is performed.
+Here another Bitmap Index Scan with a Bitmap Heap Scan is performed comparing the year.
 
 \subsection*{Table Scan}
 
@@ -545,8 +572,7 @@ Gather  (cost=1000.00..29851.09 rows=1 width=113)
 Planning Time: 0.627 ms
 Execution Time: 66.269 ms
 \end{verbatim}}
-
-First, a parallel Seq Scan is performed on the \texttt{publ} table.
+Here we are not using any Index, because of this a parallel Seq Scan is performed on the \texttt{publ} table.
 Then \texttt{Gather} is used to collect the results from the two parallel workers, from the parallel Seq Scan.
 \cite{ParallelQueryDocumentation2024}
 
@@ -626,7 +652,7 @@ Execution Time: 236.986 ms
 \end{verbatim}}
 
 For the IN-Predicate query, a Seq Scan is performed on \texttt{auth}.
-A parrallel Hash Semi Join joins the results from the parallel Hash, which we used the Seq Scan for, and a parallel Seq
+A parallel Hash Semi Join joins the results from the parallel Hash, which we used the Seq Scan for, and a parallel Seq
 scan on publ.
 The results are then gathered from the parallel workers, as before.
 
@@ -656,7 +682,7 @@ Gather  (cost=1000.00..35038.69 rows=51877 width=112)
   Workers Planned: 2
   Workers Launched: 2
   ->  Parallel Seq Scan on publ  (cost=0.00..28850.99 rows=21615 width=112)
-                                (actual time=0.024..55.584 rows=16934 loops=3)
+                                 (actual time=0.024..55.584 rows=16934 loops=3)
         Filter: ((year)::text = '2000'::text)
         Rows Removed by Filter: 394137
 Planning Time: 0.117 ms
