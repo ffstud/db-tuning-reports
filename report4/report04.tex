@@ -349,9 +349,10 @@ Planning Time: 0.677 ms
 Execution Time: 6.316 ms
 \end{verbatim}}
 
-Similar to the clustered Index, Postgres makes use of a HashAggregate to begin and in the end using a Nested Loop Join and an Index scan on publ.
-The main difference from cluster selection is that it starts with a bitmap index scan in combination with a bitmap heap scan, which selects the three selected authors, as in the \texttt{auth} name index condition.
-Then, similarly to the clustering index, the hash aggregate operation is performed, followed by an index scan on the \texttt{pubID} attribute of the \texttt{publ} table.
+First, an index scan with the three chosen authors as in the condition is performed on the name index of the \texttt{auth}
+table.
+Then, similarly to the clustering index, the hash aggregate operation is performed, followed by an index scan on the
+\texttt{pubID} attribute of the \texttt{publ} table.
 Finally, the results are joined using a nested loop.
 
 \paragraph{Multipoint Query -- High Selectivity}
@@ -422,7 +423,7 @@ Execution Time: 0.025 ms
 \end{verbatim}}
 
 For this plan an index scan is again performed on the \texttt{pubID} attribute of the \texttt{publ} table.
-Similar to every other scans on \texttt{pubID}
+Similar to every other scan on \texttt{pubID}.
 
 \paragraph{Multipoint Query vs. Multipoint Query IN-Predicate -- Low Selectivity}
 
@@ -497,7 +498,7 @@ Planning Time: 0.410 ms
 Execution Time: 4.417 ms
 \end{verbatim}}
 
-A Bitmap Heap Scan is performed on the \texttt{name} attribute of the \texttt{auth} table, followed by hash aggregation.
+A Bitmap Heap Scan (including Bitmap Index Scan) is performed on the \texttt{name} attribute of the \texttt{auth} table, followed by hash aggregation.
 Then, an index scan is performed on \texttt{pubID} and finally the results are joined using a nested loop.
 
 \paragraph{Multipoint Query -- High Selectivity}
@@ -572,7 +573,7 @@ Gather  (cost=1000.00..29851.09 rows=1 width=113)
 Planning Time: 0.627 ms
 Execution Time: 66.269 ms
 \end{verbatim}}
-Here we are not using any Index, because of this a parallel Seq Scan is performed on the \texttt{publ} table.
+Here we are not using any index, because of this a parallel Seq Scan is performed on the \texttt{publ} table.
 Then \texttt{Gather} is used to collect the results from the two parallel workers, from the parallel Seq Scan.
 \cite{ParallelQueryDocumentation2024}
 
@@ -720,17 +721,17 @@ Discuss the runtime results for the different index types and the table scan. Ar
 Firstly, we will look at the point query.
 The clustering and non-clustering B$^+$ tree indexes have a similar throughput.
 The non-clustering hash index has the highest throughput, which is expected, as hash indexes are faster for point queries.
-As Expected, the table scan has the lowest throughput, as there is no index that can be used.
+As expected, the table scan has the lowest throughput, as there is no index that can be used.
 
 Regarding the multipoint query with low selectivity, the B$^+$ indexes and the hash index performed somewhat similarly.
 The clustering B$^+$ index had the highest throughput, which makes sense since the clustering index sorts the data
 by the indexed attribute, which benefits ranged queries.
 Again, the table scan had the lowest throughput.
 
-For the multipoint query with the IN-Predicate, the Hash index outperformed the B$^+$ indexes.
+For the multipoint query with the IN-predicate, the hash index outperformed the B$^+$ indexes.
 This outcome is quite interesting; from a naive perspective, one would expect the clustered B$^+$ index to perform
 better than the hash index.
-However, since there are multiple exact mathes involved in the IN-Predicate, the hash index is faster.
+However, since there are multiple exact matches involved in the IN-predicate, the hash index is faster.
 And just like with the previous queries, the table scan had the lowest throughput.
 
 Lastly, for the multipoint query with high selectivity, the clustering B$^+$ index had the highest throughput, having
@@ -742,10 +743,14 @@ The rest performed similarly, but the table scan still had the lowest throughput
 
 \subsection*{Time Spent on this Assignment}
 
-Time in hours per person: \textbf{XXX}
+Time in hours per person:
 
-\subsection*{References}
+\begin{itemize}
+    \item Florian Frauenschuh: \textbf{7}
+    \item Peter Lindner: \textbf{5.5}
+    \item Alexander Weilert: \textbf{6.5}
+\end{itemize}
 
-\printbibliography
+\printbibliography[title=References]
 
 \end{document}
