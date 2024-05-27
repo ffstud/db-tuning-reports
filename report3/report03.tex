@@ -219,7 +219,7 @@ CREATE INDEX idx_dept_salary ON Employee [USING BTREE] (dept, salary);
 
 Can the system take advantage of covering indexes? What if the index covers the query, but the condition is not a prefix of the attribute sequence \texttt{(dept,salary)}?
 
-Taking advantage of covering indexes with \texttt{index-only scans} is only possible under the following restrictions:
+Taking advantage of covering indexes with \texttt{index-only scans} is only possible under the following conditions:
 
 \begin{enumerate}
     \item Index type must support index-only scans. \texttt{B-Tree} always supports it, while \texttt{GiST} and
