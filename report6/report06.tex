@@ -8,6 +8,13 @@
 \usepackage{xcolor}
 \usepackage{multicol}
 \usepackage{booktabs}
+\usepackage[
+  backend=biber,
+  style=numeric,
+  sorting=none
+]{biblatex}
+
+\addbibresource{references/references.bib}
 
 \setlength{\parindent}{0em}
 \setlength{\parskip}{0.5em}
@@ -95,6 +102,10 @@ CREATE TABLE IF NOT EXISTS accounts (
 \end{lstlisting}
 
 and inserted the initial data by using batch statements.
+The isolation levels were set by executing
+\begin{lstlisting}[style=dbtsql]
+SET TRANSACTION ISOLATION LEVEL (READ COMMITTED | SERIALIZABLE);
+\end{lstlisting}
 
 
 \subsection*{Solution (a)}
@@ -127,9 +138,9 @@ Throughput and correctness for solution (a) with isolation level \lstinline[styl
     \#Concurrent Transactions & Throughput [transactions/sec] & Correctness
       \tabularnewline
     \hline
-    1 & 645.16 & 1.0 \tabularnewline
-    2 & 1052.63 & 0.84 \tabularnewline
-    3 & 1333.33 & 0.93 \tabularnewline
+    1 & 632.91 & 1.0 \tabularnewline
+    2 & 917.43 & 0.87 \tabularnewline
+    3 & 1123,59 & 0.98 \tabularnewline
     4 & 1111.11 & 0.89 \tabularnewline
     5 & 1265.82 & 0.96 \tabularnewline
   \end{tabular}
@@ -165,48 +176,76 @@ Throughput and correctness for solution (b) with isolation level \lstinline[styl
     \#Concurrent Transactions & Throughput [transactions/sec] & Correctness
       \tabularnewline
     \hline
-    1 & 943.39 & 1.0 \tabularnewline
+    1 & 892.85 & 1.0 \tabularnewline
     2 & 1219.51 & 1.0 \tabularnewline
     3 & 1298.7 & 1.0 \tabularnewline
-    4 & 1369.86 & 1.0 \tabularnewline
-    5 & 1408.45 & 1.0 \tabularnewline
+    4 & 1298.7 & 1.0 \tabularnewline
+    5 & 1351.35 & 1.0 \tabularnewline
   \end{tabular}
 \end{table}
 
 \subsection*{Discussion}
 
-Discuss the outcomes and explain the difference between the isolation levels in PostgreSQL with respect to your experiment.
+\paragraph{Solution (a)}
 
-Explain \textbf{with your own words} how PostgreSQL deals with updates in the different isolation levels, within a transaction and within a single SQL command. Explicitly explain why you got the experimental results for solution (a) and (b), respectively.
+For solution (a), the performance and correctness varied significantly between the two isolation levels:
+\lstinline[style=dbtsql]{READ COMMITTED} and \lstinline[style=dbtsql]{SERIALIZABLE}.
 
-\paragraph{Solution (a)}\mbox{}
+\textbf{Read Committed:}
+The \lstinline[style=dbtsql]{READ COMMITTED} isolation level is the default in PostgreSQL \cite{PostgreSQL2021IsolationLevel}
+and ensures that any data read during a transaction is committed at the moment it is read.
+This level prevents dirty reads, which means no transaction can read data that another transaction has written but not yet committed.
+However, \lstinline[style=dbtsql]{READ COMMITTED} does not protect against non-repeatable reads or phantom reads.
 
-\youranswerhere{}
+In our experiments, as the number of concurrent transactions increased, the throughput also increased.
+This increase in throughput is expected as more transactions are processed simultaneously.
+However, the correctness decreased with increased concurrency.
+This decline is due to the fact that \lstinline[style=dbtsql]{READ COMMITTED} allows other transactions to modify data between reads within the same transaction,
+leading to anomalies like non-repeatable reads and phantom reads.
+These anomalies contribute to inconsistencies, hence the drop in correctness.
 
-\paragraph{Solution (b)}\mbox{}
+\textbf{Serializable:}
+The \lstinline[style=dbtsql]{SERIALIZABLE} isolation level provides the highest level of isolation by ensuring that transactions are executed in a way that produces the same result as if they were run serially, one after another.
+This level eliminates anomalies such as dirty reads, non-repeatable reads, and phantom reads, thus maintaining data consistency and correctness.
 
-\youranswerhere{}
+Under the \lstinline[style=dbtsql]{SERIALIZABLE} isolation level, the throughput in most cases was slightly lower compared to \lstinline[style=dbtsql]{READ COMMITTED}.
+However, the correctness remained high across all levels of concurrency.
+This stability is due to the stringent measures in place to maintain serializability, even though it may involve higher
+overhead due to potential transaction rollbacks and retries to resolve conflicts.
+
+\paragraph{Solution (b)}
+
+For solution (b), where each transaction consists of two update statements, the performance and correctness were high across both isolation levels.
+
+\textbf{Read Committed:}
+In this scenario, \lstinline[style=dbtsql]{READ COMMITTED} performed really well.
+The throughput consistently increased with the number of concurrent transactions.
+The correctness remained at 100\% across all levels of concurrency.
+This high performance and correctness are due to the simplicity of the transactions, which involve only a couple of updates.
+Hence, the likelihood of encountering non-repeatable reads or phantom reads is minimized.
+
+\textbf{Serializable:}
+The \lstinline[style=dbtsql]{SERIALIZABLE} isolation level also showed high performance and correctness.
+The throughput was slightly lower than \lstinline[style=dbtsql]{READ COMMITTED}.
+Again, the correctness remained at 100\% across all concurrency levels.
+
+\textbf{General Discussion:}
+In PostgreSQL, isolation levels are essential for maintaining data consistency and integrity.
+The results indicate that for simple transactions involving a small number of updates, both
+\lstinline[style=dbtsql]{READ COMMITTED} and \lstinline[style=dbtsql]{SERIALIZABLE} can achieve high throughput and correctness.
+However, for more complex transactions, \lstinline[style=dbtsql]{SERIALIZABLE} provides higher correctness at the cost of some throughput,
+whereas \lstinline[style=dbtsql]{READ COMMITTED} offers higher throughput but lower correctness.
 
 \subsection*{Time Spent on this Assignment}
 
 Time in hours per person:
 
 \begin{itemize}
-  \item Florian Frauenschuh: \textbf{x}
-  \item Peter Lindner: \textbf{y}
-  \item Alexander Weilert: \textbf{z}
+  \item Florian Frauenschuh: \textbf{2}
+  \item Peter Lindner: \textbf{4}
+  \item Alexander Weilert: \textbf{1.5}
 \end{itemize}
 
-\subsection*{References}
-
-\begin{table}[H]
-  \centering
-  \begin{tabular}{c}
-    \hline
-    \textbf{Important:} Reference your information sources! \tabularnewline
-    Remove this section if you use footnotes to reference your information sources. \tabularnewline
-    \hline
-  \end{tabular}
-\end{table}
+\printbibliography[title=References]
 
 \end{document}
