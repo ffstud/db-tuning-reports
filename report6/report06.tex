@@ -229,7 +229,7 @@ The \lstinline[style=dbtsql]{SERIALIZABLE} isolation level also showed high perf
 The throughput was slightly lower than \lstinline[style=dbtsql]{READ COMMITTED}.
 Again, the correctness remained at 100\% across all concurrency levels.
 
-\textbf{General Discussion:}
+\paragraph{General Discussion}
 In PostgreSQL, isolation levels are essential for maintaining data consistency and integrity.
 The results indicate that for simple transactions involving a small number of updates, both
 \lstinline[style=dbtsql]{READ COMMITTED} and \lstinline[style=dbtsql]{SERIALIZABLE} can achieve high throughput and correctness.
