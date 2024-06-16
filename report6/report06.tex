@@ -1,0 +1,212 @@
+\documentclass[11pt]{scrartcl}
+
+\usepackage[top=1.5cm]{geometry}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage{booktabs}
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
+
+\newcommand{\youranswerhere}{[Your answer goes here \ldots]}
+\renewcommand{\thesubsection}{\arabic{subsection}}
+
+\lstdefinestyle{dbtsql}{
+  language=SQL,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{magenta!75!black},
+  stringstyle=\color{green!50!black},
+  showspaces=false,
+  showstringspaces=false,
+  commentstyle=\color{gray}}
+
+\title{
+  \textbf{\large Assignment 6} \\
+  Concurrency Tuning \\
+  {\large Database Tuning}}
+
+\author{
+  New Group 8 \\
+  \large Frauenschuh Florian, 12109584 \\
+  \large Lindner Peter, 12101607 \\
+  \large Weilert Alexander, 12119653
+}
+
+\begin{document}
+
+\maketitle
+
+\paragraph{Notes}
+
+\begin{itemize}
+  \item You will need to run transactions concurrently using threads in Java. See \\ \url{https://dbresearch.uni-salzburg.at/teaching/2020ss/dbt/account.zip} for an example.
+\end{itemize}
+
+\subsection*{Experimental Setup}
+
+For our experiments we used the following hardware and software:
+
+\begin{multicols}{2}
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{lc}
+      \toprule
+      Component & Specs \\
+      \midrule
+      Processor & i7-13700H 3.7-5.0 GHz \\
+      Memory & 32 GiB \\
+      \bottomrule
+    \end{tabular}
+    \caption{Hardware: Dell XPS 15 9530}
+    \label{table:hardware}
+  \end{table}
+
+  \columnbreak
+
+  \begin{table}[H]
+    \centering
+    \begin{tabular}{lc}
+      \toprule
+      Software & Version \\
+      \midrule
+      OS & Ubuntu 22.04 \\
+      Postgres & 2.3.4 \\
+      postgresql & 42.7.3 \\
+      MariaDB & 10.6.16 \\
+      mariadb-java-client & 3.3.3 \\
+      Java & 18 \\
+      \bottomrule
+    \end{tabular}
+    \caption{Software}
+    \label{table:software_versions}
+  \end{table}
+\end{multicols}
+
+Before each test run we created the table \texttt{accounts} by
+\begin{lstlisting}[style=dbtsql]
+CREATE TABLE IF NOT EXISTS accounts (
+  account INT,
+  balance INT
+);
+\end{lstlisting}
+
+and inserted the initial data by using batch statements.
+
+
+\subsection*{Solution (a)}
+
+\paragraph{Read Committed}
+
+Throughput and correctness for solution (a) with isolation level \lstinline[style=dbtsql]{READ COMMITTED}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c|c}
+    \#Concurrent Transactions & Throughput [transactions/sec] & Correctness
+      \tabularnewline
+    \hline
+    1 & 714.28 & 1.0 \tabularnewline
+    2 & 1123.59 & 0.87 \tabularnewline
+    3 & 1176.47 & 0.89 \tabularnewline
+    4 & 1020.4 & 0.87 \tabularnewline
+    5 & 1315.79 & 0.93 \tabularnewline
+  \end{tabular}
+\end{table}
+
+\paragraph{Serializable}
+
+Throughput and correctness for solution (a) with isolation level \lstinline[style=dbtsql]{SERIALIZABLE}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c|c}
+    \#Concurrent Transactions & Throughput [transactions/sec] & Correctness
+      \tabularnewline
+    \hline
+    1 & 645.16 & 1.0 \tabularnewline
+    2 & 1052.63 & 0.84 \tabularnewline
+    3 & 1333.33 & 0.93 \tabularnewline
+    4 & 1111.11 & 0.89 \tabularnewline
+    5 & 1265.82 & 0.96 \tabularnewline
+  \end{tabular}
+\end{table}
+
+\subsection*{Solution (b)}
+
+\paragraph{Read Committed}
+
+Throughput and correctness for solution (b) with isolation level \lstinline[style=dbtsql]{READ COMMITTED}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c|c}
+    \#Concurrent Transactions & Throughput [transactions/sec] & Correctness
+      \tabularnewline
+    \hline
+    1 & 917.43 & 1.0 \tabularnewline
+    2 & 1219.51 & 1.0 \tabularnewline
+    3 & 1315.79 & 1.0 \tabularnewline
+    4 & 1333.33 & 1.0 \tabularnewline
+    5 & 1408.45 & 1.0 \tabularnewline
+  \end{tabular}
+\end{table}
+
+\paragraph{Serializable}
+
+Throughput and correctness for solution (b) with isolation level \lstinline[style=dbtsql]{SERIALIZABLE}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c|c}
+    \#Concurrent Transactions & Throughput [transactions/sec] & Correctness
+      \tabularnewline
+    \hline
+    1 & 943.39 & 1.0 \tabularnewline
+    2 & 1219.51 & 1.0 \tabularnewline
+    3 & 1298.7 & 1.0 \tabularnewline
+    4 & 1369.86 & 1.0 \tabularnewline
+    5 & 1408.45 & 1.0 \tabularnewline
+  \end{tabular}
+\end{table}
+
+\subsection*{Discussion}
+
+Discuss the outcomes and explain the difference between the isolation levels in PostgreSQL with respect to your experiment.
+
+Explain \textbf{with your own words} how PostgreSQL deals with updates in the different isolation levels, within a transaction and within a single SQL command. Explicitly explain why you got the experimental results for solution (a) and (b), respectively.
+
+\paragraph{Solution (a)}\mbox{}
+
+\youranswerhere{}
+
+\paragraph{Solution (b)}\mbox{}
+
+\youranswerhere{}
+
+\subsection*{Time Spent on this Assignment}
+
+Time in hours per person:
+
+\begin{itemize}
+  \item Florian Frauenschuh: \textbf{x}
+  \item Peter Lindner: \textbf{y}
+  \item Alexander Weilert: \textbf{z}
+\end{itemize}
+
+\subsection*{References}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c}
+    \hline
+    \textbf{Important:} Reference your information sources! \tabularnewline
+    Remove this section if you use footnotes to reference your information sources. \tabularnewline
+    \hline
+  \end{tabular}
+\end{table}
+
+\end{document}
